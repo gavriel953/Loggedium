@@ -1,8 +1,8 @@
-from keyfortify.PwdStrengthChecker import PasswordStrengthChecker
+from loggedium.PwdStrengthChecker import PasswordStrengthChecker
 
 
 def main():
-    print("🔐 KeyFortify — Password Strength Analyzer\n")
+    print("🔐 Loggedium — Password Strength Analyzer\n")
 
     password = input("Enter password: ").strip()
     website = input("Enter website name: ").strip()
