@@ -1,6 +1,6 @@
-# 🔐 KeyFortify
+# 🔐 Loggedium
 
-**KeyFortify** is a Python-based **Password Strength Checker** developed as part of my cybersecurity learning journey.  
+**Loggedium** is a Python-based **Password Strength Checker** developed as part of my cybersecurity learning journey.  
 The goal of this project is to build **practical, real-world security skills** while designing a tool that evaluates password strength using modern security concepts.
 
 This project focuses not just on *length and complexity*, but also on **real attack models** such as data breaches and brute-force feasibility.
