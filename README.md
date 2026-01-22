@@ -60,3 +60,4 @@ KeyFortify helps users understand:
 ### 1️⃣ Activate virtual environment
 ```bash
 source .venv/bin/activate
+python3 main.py
