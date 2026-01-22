@@ -4,7 +4,6 @@ import string
 import math
 import re
 from typing import Tuple, Dict
-# from functools import lru_cache
 from urllib.parse import urlparse
 
 class PasswordStrengthChecker:
@@ -67,57 +66,41 @@ class PasswordStrengthChecker:
         
         website_input = website_input.lower().strip()
 
-        # Check if it looks like a URL (contains :// or starts with www.)
         if "://" in website_input or website_input.startswith('www.'):
             try:
-                # Add scheme if missing
                 if not website_input.startswith((('http://','https://'))):
                     website_input = "https://"+website_input
 
-                # Parse the URL
                 parsed = urlparse(website_input)
                 domain = parsed.netloc or parsed.path
 
-                # Remove www. prefix
                 if domain.startswith('www.'):
                     domain = domain[4:]
                 
-                # Extract the main domain name (remove TLD)
-                # e.g., google.com -> google, facebook.co.uk -> facebook
                 parts = domain.split(".")
 
-                # Handle subdomains (mail.google.com -> google)
                 if len(parts) > 2:
-                    # Common subdomain prefixes to skip
                     skip_subdomains = {"www", "m", "mobile", "mail", "login", "accounts", "auth", "secure"}
-                    # Filter out known subdomains
                     filtered_parts = [p for p in parts if p not in skip_subdomains]
                     
                     if len(filtered_parts) >= 2:
-                        # Take the second-to-last part (main domain)
                         return filtered_parts[-2]
                     
                 if len(parts) >= 2:
-                    # Return the main domain name (before the TLD)
                     return parts[-2]
                 
                 return domain
             
             except:
-                # If URL parsing fails, try to extract domain manually
                 pass
         
-        # Handle plain domain names (google.com, facebook.co.uk)
         if "." in website_input:
             parts = website_input.split(".")
-            # Remove www if present
             if parts[0] == "www":
                 parts = parts[1:]
-            # Return the main domain name
             if parts:
                 return parts[0]
         
-        # Already a simple name (youtube, twitter, etc.)
         return website_input
     
     def contains_website_name(self) -> Tuple[bool,str]:
@@ -132,11 +115,9 @@ class PasswordStrengthChecker:
         
         pwd_lower = self.password.lower()
 
-        # Check direct website name
         if self.website in pwd_lower:
             return True, self.website
         
-        # Check for aliases
         if self.website in self.WEBSITE_ALIASES:
             for alias in self.WEBSITE_ALIASES[self.website]:
                 if alias in pwd_lower:
@@ -182,18 +163,15 @@ class PasswordStrengthChecker:
             Tuple of (is_breached, message)
         """
         try:
-            #Hash the password
             sha1_pw = hashlib.sha1(self.password.encode('utf-8')).hexdigest().upper()
             prefix, suffix = sha1_pw[:5], sha1_pw[5:]
 
-            # Query the Have I Been Pawned API
             url = f"https://api.pwnedpasswords.com/range/{prefix}"
             response = requests.get(url, timeout=5)
 
             if response.status_code != 200:
                 return False, "⚠️ Could not verify breach status (API unavailable)."
             
-            # Parse response
             hashes = (line.split(":") for line in response.text.splitlines())
             for h, count in hashes:
                 if h == suffix:
@@ -231,7 +209,6 @@ class PasswordStrengthChecker:
         if charset_size == 0:
             return 0.0
         
-        # Entropy = log2(charset_size^length)
         entropy = len(self.password) * math.log(charset_size)
         return round(entropy, 2)
     
@@ -243,7 +220,6 @@ class PasswordStrengthChecker:
         Returns:
             Dictionary with different attack scenario timings
         """
-        # Define character sets
         lowercase = set(string.ascii_lowercase)
         uppercase = set(string.ascii_uppercase)
         digits = set(string.digits)
@@ -268,22 +244,18 @@ class PasswordStrengthChecker:
                 charset_size = 1
                 char_position = 0
             
-            # Add attempts for this position
-            # Formula: position_value * (charset_size ^ remaining_positions) + charset_size^remaining
             remaining_positions = len(self.password) - i - 1
             total_breach_attempts += char_position * (charset_size ** remaining_positions)
 
         total_breach_attempts += 1
 
-        # If password is too simple, ensure minimum attempts
         if total_breach_attempts < 100:
             total_breach_attempts = 100
         
-        # Different attack scenarios
         scenarios = {
-            "online": 1e3,        # 1,000 guesses/second (throttled online attack)
-            "offline_slow": 1e9,  # 1 billion/second (single GPU)
-            "offline_fast": 1e12  # 1 trillion/second (powerful cluster)
+            "online": 1e3,
+            "offline_slow": 1e9,
+            "offline_fast": 1e12 
         }
 
         results = {}
@@ -316,7 +288,6 @@ class PasswordStrengthChecker:
 
         years = seconds / year
 
-        # Human-scale ranges
         if years < 1_000:
             return f"{years:.1f} years"
         elif years < 1_000_000:
@@ -324,7 +295,6 @@ class PasswordStrengthChecker:
         elif years < 1_000_000_000:
             return f"{years / 1_000_000:.1f} million years"
 
-        # Beyond realistic human meaning
         elif years < 13.8e9:
             return f"{years / 1_000_000_000:.1f} billion years"
         else:
@@ -347,10 +317,6 @@ class PasswordStrengthChecker:
         issues = []
         suggestions = []
 
-        # CRITICAL: Check for extremely weak passwords first
-        # This prevents short/common passwords from getting moderate scores
-        
-        # Length check - STRICT enforcement
         pwd_length = len(self.password)
         
         if pwd_length < 4:
@@ -360,13 +326,11 @@ class PasswordStrengthChecker:
             return self._finalize_evaluation(score, issues, suggestions)
         
         elif pwd_length < 6:
-            # Very short - cap score heavily
             score = 5
             issues.append("Password is too short (less than 6 characters)")
             suggestions.append("Use at least 12 characters for better security")
 
         elif pwd_length < 8:
-            # Short - limit score potential
             score = 15
             issues.append("Password is short (less than 8 characters)")
             suggestions.append("Use at least 12 characters for better security")
@@ -384,14 +348,12 @@ class PasswordStrengthChecker:
         else:
             score += 40
 
-        # Common password check - BEFORE other checks
         if self.is_common_password():
-            score = min(score, 5)  # Cap at extremely low score
+            score = min(score, 5) 
             issues.append("This is a commonly used password")
             suggestions.append("Use a unique password not found in common lists")
             return self._finalize_evaluation(score, issues, suggestions)
         
-        # Breach check - CRITICAL (do early)
         breached, breach_msg = self.check_breach()
         if breached and "CRITICAL" in breach_msg:
             score = min(score, 5)
@@ -399,7 +361,6 @@ class PasswordStrengthChecker:
             suggestions.append("URGENT: Change this password immediately!")
             return self._finalize_evaluation(score, issues, suggestions, breach_msg)
         
-        # Character variety (0-30 points)
         variety_score = 0
         has_lower = any(c.islower() for c in self.password)
         has_upper = any(c.isupper() for c in self.password)
@@ -430,7 +391,6 @@ class PasswordStrengthChecker:
             issues.append("No special characters")
             suggestions.append("Add special characters (!@#$%^&*)")
 
-        # If password has only one type of character, it's very weak
         char_types = sum([has_upper, has_digit, has_lower, has_special])
         if char_types == 1:
             score = min(score, 10)
@@ -439,11 +399,9 @@ class PasswordStrengthChecker:
         
         score += variety_score
 
-        # Bonus for having all 4 character types (0-10 points)
         if char_types == 4:
             score += 10
 
-        # Pattern checks (deductions)
         if self.has_keyboard_pattern():
             score -= 20
             issues.append("Contains keyboard pattern (e.g., 'qwerty')")
@@ -465,7 +423,6 @@ class PasswordStrengthChecker:
             issues.append(f"Contains website/service name: '{matched_term}'")
             suggestions.append("Avoid including the website name in your password")
         
-        # Breach check for non-critical cases
         if breached:
             score -= 30
             issues.append("Password found in data breaches")
@@ -486,10 +443,8 @@ class PasswordStrengthChecker:
         Returns:
             Complete evaluation dictionary
         """
-        # Ensure score is within bounds
         score = max(0, min(100, score))
 
-        # Determine rating based on score
         if score >= 80:
             rating = "Strong"
             emoji = "🟢"
@@ -506,7 +461,6 @@ class PasswordStrengthChecker:
             rating = "Extremely Weak"
             emoji = "🔴"
 
-        # Get breach status
         if breach_msg is None:
             _, breach_msg = self.check_breach()
         
@@ -549,14 +503,12 @@ class PasswordStrengthChecker:
         report.append(f"  • Offline Attack (powerful): {crack_times['offline_fast']}")
         report.append("")
 
-        # Issues
         if evaluation["issues"]:
             report.append("⚠️  Issues Found:")
             for issue in evaluation["issues"]:
                 report.append(f"  • {issue}")
             report.append("")
         
-        # Suggestions
         if evaluation["suggestions"]:
             report.append("💡 Suggestions for Improvement:")
             for suggestion in evaluation['suggestions']:

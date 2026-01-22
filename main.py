@@ -42,13 +42,11 @@ def get_password_input() -> str:
         sys.exit(0)
 
     except EOFError:
-        # Handles Ctrl+D (Unix) or Ctrl+Z (Windows) - end of file
         print("\n\n❌ Error: Input terminated unexpectedly.")
         print("Please try again or press Ctrl+C to exit.")
         return None
     
     except Exception as e:
-        # Catch any other unexpected errors
         print(f"\n❌ Unexpected error while reading password: {str(e)}")
         print("Please try again or press Ctrl+C to exit.")
         return None
@@ -108,7 +106,6 @@ def main():
     try:
         print_banner()
 
-        # Get user input with retry logic
         password = None
         while password is None:
             password = get_password_input()
@@ -120,15 +117,12 @@ def main():
         
         website = get_website_input()
 
-        # Initialize checker
         print("\n🔍 Analyzing password security...\n")
         checker = PasswordStrengthChecker(password, website)
 
-        # Generate and display report
         report = checker.generate_report()
         print(report)
         
-        # Ask if the user wants tips
         try:
             show_tips = input("\n📚 Would you like to see password security tips? (y/n): ").strip().lower()
             if show_tips in ['y', 'yes']:
@@ -136,12 +130,11 @@ def main():
         except (KeyboardInterrupt, EOFError):
             pass
 
-        # Ask if user wants to test another password
         try:
             another = input("\n🔄 Test another password? (y/n): ").strip().lower()
             if another in ['y', 'yes']:
                 print("\n" + "="*60 + "\n")
-                main()  # Recursive call for another test
+                main()
             else:
                 print("\n✨ Thank you for using Loggedium! Stay secure! 🔒")
         except (KeyboardInterrupt, EOFError):
